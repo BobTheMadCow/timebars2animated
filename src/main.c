@@ -37,10 +37,16 @@ float adjusted_hour_unit_height = HOUR_UNIT_HEIGHT;
 #define NUM_LABEL_HEIGHT 36
 
 #define LABEL_TEXT "HOUR  MINS"
-	
-bool invert_colors = false;
-GColor bg_color = GColorWhite;
-GColor fg_color = GColorBlack;
+
+#define INVERT_COLORS_KEY 0
+#define ANIMATION_DURATION_KEY 1
+#define VIBE_KEY 2
+#define DEFAULT_INVERT_COLORS_VALUE false
+#define DEFALUT_ANIMATION_DURATION_VALUE 3000 //3 seconds - short enough for the animation to complete before the light goes out.
+#define DEFAULT_VIBE_VALUE false
+bool invert_colors;
+int animation_duration;
+bool vibe;
 	
 GFont *text_font;
 GFont *num_font;
@@ -75,9 +81,6 @@ GRect hour_to_frame;
 GRect minute_from_frame;
 GRect minute_to_frame;
 
-#define ANIMATION_DURATION 3000
-#define ANIMATION_DELAY 1000
-
 static int round_float_to_int(float x)
 {
 	if((x-(int)x) >= 0.5){return (int)x + 1;}
@@ -86,16 +89,18 @@ static int round_float_to_int(float x)
 
 static void graphics_context_set_colors(GContext *ctx)
 {
+	GColor fg_color;
+	if(invert_colors)
+	{
+		fg_color = GColorWhite;
+	}
+	else
+	{
+		fg_color = GColorBlack;
+	}
 	graphics_context_set_stroke_color(ctx, fg_color);
 	graphics_context_set_fill_color(ctx, fg_color);
 	graphics_context_set_text_color(ctx, fg_color);
-}
-
-static void masking_layer_draw(Layer *layer, GContext *ctx)
-{
-	graphics_context_set_stroke_color(ctx, bg_color);
-	graphics_context_set_fill_color(ctx, bg_color);
-	graphics_fill_rect(ctx, layer_get_frame(layer), 0, GCornerNone); //Fills the layer the bg_color.
 }
 
 static void animate_hour_down(int from_time, int to_time)
@@ -113,8 +118,8 @@ static void animate_hour_down(int from_time, int to_time)
 		
 		hour_down_animation = property_animation_create_layer_frame(hour_bar_layer, &hour_from_frame, &hour_to_frame);
 		animation_set_curve((Animation*)hour_down_animation, CURVE); //defaults to EaseInOut
-		animation_set_delay((Animation*)hour_down_animation, ANIMATION_DELAY);
-		animation_set_duration((Animation*)hour_down_animation, ANIMATION_DURATION);
+		animation_set_delay((Animation*)hour_down_animation, (animation_duration / 4));
+		animation_set_duration((Animation*)hour_down_animation, ((animation_duration / 4) * 3));
 		animation_schedule((Animation*)hour_down_animation);
 	}
 }
@@ -134,8 +139,8 @@ static void animate_hour_up(int from_time, int to_time)
 		
 		hour_up_animation = property_animation_create_layer_frame(hour_bar_layer, &hour_from_frame, &hour_to_frame);
 		animation_set_curve((Animation*)hour_up_animation, CURVE); //defaults to EaseInOut
-		animation_set_delay((Animation*)hour_up_animation, ANIMATION_DELAY);
-		animation_set_duration((Animation*)hour_up_animation, ANIMATION_DURATION);
+		animation_set_delay((Animation*)hour_up_animation, (animation_duration / 4));
+		animation_set_duration((Animation*)hour_up_animation, ((animation_duration / 4) * 3));
 		animation_schedule((Animation*)hour_up_animation);
 	}
 }
@@ -155,8 +160,8 @@ static void animate_minute_down(int from_time, int to_time)
 		
 		minute_down_animation = property_animation_create_layer_frame(minute_bar_layer, &minute_from_frame, &minute_to_frame);
 		animation_set_curve((Animation*)minute_down_animation, CURVE); //defaults to EaseInOut
-		animation_set_delay((Animation*)minute_down_animation, ANIMATION_DELAY);
-		animation_set_duration((Animation*)minute_down_animation, ANIMATION_DURATION);
+		animation_set_delay((Animation*)minute_down_animation, (animation_duration / 4));
+		animation_set_duration((Animation*)minute_down_animation, ((animation_duration / 4) * 3));
 		animation_schedule((Animation*)minute_down_animation);
 	}
 }
@@ -176,8 +181,8 @@ static void animate_minute_up(int from_time, int to_time)
 		
 		minute_up_animation = property_animation_create_layer_frame(minute_bar_layer, &minute_from_frame, &minute_to_frame);
 		animation_set_curve((Animation*)minute_up_animation, CURVE); //defaults to EaseInOut
-		animation_set_delay((Animation*)minute_up_animation, ANIMATION_DELAY);
-		animation_set_duration((Animation*)minute_up_animation, ANIMATION_DURATION);
+		animation_set_delay((Animation*)minute_up_animation, (animation_duration / 4));
+		animation_set_duration((Animation*)minute_up_animation, ((animation_duration / 4) * 3));
 		animation_schedule((Animation*)minute_up_animation);
 	}
 }
@@ -235,6 +240,45 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
 	{
 		animate_minute_up(current_minute - 1, current_minute);
 	}
+	
+	if(vibe && tick_time->tm_min == 0)
+	{
+		vibes_double_pulse();
+	}
+}
+
+static void init_settings()
+{
+	invert_colors = persist_exists(INVERT_COLORS_KEY) ? persist_read_bool(INVERT_COLORS_KEY) : DEFAULT_INVERT_COLORS_VALUE;
+	animation_duration = persist_exists(ANIMATION_DURATION_KEY) ? persist_read_int(ANIMATION_DURATION_KEY) : DEFALUT_ANIMATION_DURATION_VALUE;
+	vibe = persist_exists(VIBE_KEY) ? persist_read_bool(VIBE_KEY) : DEFAULT_VIBE_VALUE;
+}
+
+static void update_settings()
+{
+	GColor bg_color;
+	GColor fg_color;
+	if(invert_colors)
+	{
+		bg_color = GColorBlack;
+		fg_color = GColorWhite;
+	}
+	else
+	{
+		bg_color = GColorWhite;
+		fg_color = GColorBlack;
+	}
+	window_stack_pop(window);	
+	window_set_background_color(window, bg_color);
+	text_layer_set_text_color(text_label_layer, fg_color);
+	window_stack_push(window, false);
+}
+
+static void save_settings()
+{
+    persist_write_bool(INVERT_COLORS_KEY, invert_colors);
+    persist_write_int(ANIMATION_DURATION_KEY, animation_duration);
+	persist_write_bool(VIBE_KEY, vibe);
 }
 
 void init(void) 
@@ -259,9 +303,24 @@ void init(void)
 	text_font = fonts_load_custom_font(resource_get_handle(TEXT_FONT_ID));
 	num_font = fonts_load_custom_font(resource_get_handle(NUM_FONT_ID));
 	
+	init_settings();
+	
+	GColor bg_color;
+	GColor fg_color;
+	if(invert_colors)
+	{
+		bg_color = GColorBlack;
+		fg_color = GColorWhite;
+	}
+	else
+	{
+		bg_color = GColorWhite;
+		fg_color = GColorBlack;
+	}
+	
 	window = window_create();
-	window_stack_push(window, true);
 	window_set_background_color(window, bg_color);
+	window_stack_push(window, true);
 	root_layer = window_get_root_layer(window);
 	
 	//prevents bars being drawn over the labels at the bottom.
@@ -305,6 +364,7 @@ void deinit(void)
 	animation_destroy((Animation*)hour_up_animation);
 	animation_destroy((Animation*)minute_down_animation);
 	animation_destroy((Animation*)minute_up_animation);
+	save_settings();
 }
 
 int main(void) 
