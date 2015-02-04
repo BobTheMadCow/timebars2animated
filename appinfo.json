@@ -1,37 +1,40 @@
 {
-    "versionLabel": "3.2",
-    "uuid": "0f56380c-64f4-4ea1-b1cd-74bf7c5c74b2",
     "appKeys": {},
-    "longName": "Time Bars",
-    "versionCode": 3,
     "capabilities": [
-        ""
+        "configurable"
     ],
-    "shortName": "Time Bars",
     "companyName": "BobTheMadCow",
-    "watchapp": {
-        "watchface": true
-    },
+    "longName": "Time Bars",
+    "projectType": "native",
     "resources": {
         "media": [
             {
+                "file": "images/TimeBarsIcon.png",
                 "menuIcon": true,
-                "type": "png",
                 "name": "IMAGE_MENU_ICON",
-                "file": "images/TimeBarsIcon.png"
+                "type": "png"
             },
             {
                 "characterRegex": "[HOUR MINS]",
-                "type": "font",
+                "compatibility": "2.7",
+                "file": "fonts/typeone.ttf",
                 "name": "FONT_TYPEONE_24",
-                "file": "fonts/typeone.ttf"
+                "type": "font"
             },
             {
                 "characterRegex": "[0-9 ]",
-                "type": "font",
+                "compatibility": "2.7",
+                "file": "fonts/typeone.ttf",
                 "name": "FONT_TYPEONE_34",
-                "file": "fonts/typeone.ttf"
+                "type": "font"
             }
         ]
+    },
+    "shortName": "Time Bars",
+    "uuid": "0f56380c-64f4-4ea1-b1cd-74bf7c5c74b2",
+    "versionCode": 3,
+    "versionLabel": "4.0",
+    "watchapp": {
+        "watchface": true
     }
 }

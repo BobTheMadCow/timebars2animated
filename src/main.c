@@ -1,6 +1,10 @@
 #include <pebble.h>
 #include <settings.h>
 
+//uncomment to disable app logging
+#undef APP_LOG
+#define APP_LOG(...)
+	
 /********************
 	 vHOUR_LOC
 	+--------+ 
@@ -92,7 +96,8 @@ static void animate_hour_down(int from_time, int to_time)
 		if(animation_is_scheduled((Animation*)hour_up_animation))
 		{
 			animation_unschedule((Animation*)hour_up_animation);
-			animation_destroy((Animation*)hour_up_animation);
+			property_animation_destroy(hour_up_animation);
+			hour_up_animation = NULL;
 		}
 		
 		hour_from_frame = GRect(HOUR_LOC, (int)(MAX_HEIGHT - (from_time * adjusted_hour_unit_height)), HOUR_WIDTH, BAR_MIN_LOC);
@@ -113,7 +118,8 @@ static void animate_hour_up(int from_time, int to_time)
 		if(animation_is_scheduled((Animation*)hour_down_animation))
 		{
 			animation_unschedule((Animation*)hour_down_animation);
-			animation_destroy((Animation*)hour_down_animation);
+			property_animation_destroy(hour_down_animation);
+			hour_down_animation = NULL;
 		}
 		
 		hour_from_frame = GRect(HOUR_LOC, (int)(MAX_HEIGHT - (from_time * adjusted_hour_unit_height)), HOUR_WIDTH, BAR_MIN_LOC);
@@ -134,7 +140,8 @@ static void animate_minute_down(int from_time, int to_time)
 		if(animation_is_scheduled((Animation*)minute_up_animation))
 		{
 			animation_unschedule((Animation*)minute_up_animation);
-			animation_destroy((Animation*)minute_up_animation);
+			property_animation_destroy(minute_up_animation);
+			minute_up_animation = NULL;
 		}
 				
 		minute_from_frame = GRect(MINUTE_LOC, (int)(MAX_HEIGHT - (from_time * MINUTE_UNIT_HEIGHT)), MINUTE_WIDTH, BAR_MIN_LOC);
@@ -155,7 +162,8 @@ static void animate_minute_up(int from_time, int to_time)
 		if(animation_is_scheduled((Animation*)minute_down_animation))
 		{
 			animation_unschedule((Animation*)minute_down_animation);
-			animation_destroy((Animation*)minute_down_animation);
+			property_animation_destroy(minute_down_animation);
+			minute_down_animation = NULL;
 		}
 				
 		minute_from_frame = GRect(MINUTE_LOC, (int)(MAX_HEIGHT - (from_time * MINUTE_UNIT_HEIGHT)), HOUR_WIDTH, BAR_MIN_LOC);
@@ -223,28 +231,10 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
 		animate_minute_up(current_minute - 1, current_minute);
 	}
 	
-	if(vibe && tick_time->tm_min == 0)
+	if(vibrate && tick_time->tm_min == 0)
 	{
 		vibes_double_pulse();
 	}
-}
-
-static void update_settings()
-{
-	if(invert_colors)
-	{
-		bg_color = GColorBlack;
-		fg_color = GColorWhite;
-	}
-	else
-	{
-		bg_color = GColorWhite;
-		fg_color = GColorBlack;
-	}
-	window_stack_pop(window);	
-	window_set_background_color(window, bg_color);
-	text_layer_set_text_color(text_label_layer, fg_color);
-	window_stack_push(window, false);
 }
 
 void init(void) 
@@ -269,18 +259,8 @@ void init(void)
 	text_font = fonts_load_custom_font(resource_get_handle(TEXT_FONT_ID));
 	num_font = fonts_load_custom_font(resource_get_handle(NUM_FONT_ID));
 	
+	load_settings();
 	init_settings();
-	
-	if(invert_colors)
-	{
-		bg_color = GColorBlack;
-		fg_color = GColorWhite;
-	}
-	else
-	{
-		bg_color = GColorWhite;
-		fg_color = GColorBlack;
-	}
 	
 	window = window_create();
 	window_set_background_color(window, bg_color);
@@ -311,6 +291,10 @@ void init(void)
 	text_layer_set_text(text_label_layer, LABEL_TEXT);
 	layer_add_child(root_layer, text_layer_get_layer(text_label_layer));
 	
+	inverter_layer = inverter_layer_create(GRect(0,0,144,168));
+	layer_add_child(root_layer, inverter_layer_get_layer(inverter_layer));
+	layer_set_hidden(inverter_layer_get_layer(inverter_layer), !invert_colors); //hide layer to not invert colors
+	
 	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);	
 }
 
@@ -321,13 +305,14 @@ void deinit(void)
 	layer_destroy(hour_bar_layer);
 	layer_destroy(minute_bar_layer);
 	layer_destroy(bar_clipping_layer);
+	inverter_layer_destroy(inverter_layer);
 	text_layer_destroy(text_label_layer);
 	tick_timer_service_unsubscribe();
 	window_destroy(window);
-	animation_destroy((Animation*)hour_down_animation);
-	animation_destroy((Animation*)hour_up_animation);
-	animation_destroy((Animation*)minute_down_animation);
-	animation_destroy((Animation*)minute_up_animation);
+	property_animation_destroy(hour_down_animation);
+	property_animation_destroy(hour_up_animation);
+	property_animation_destroy(minute_down_animation);
+	property_animation_destroy(minute_up_animation);
 	save_settings();
 }
 
