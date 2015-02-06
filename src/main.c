@@ -260,7 +260,6 @@ void init(void)
 	num_font = fonts_load_custom_font(resource_get_handle(NUM_FONT_ID));
 	
 	load_settings();
-	init_settings();
 	
 	window = window_create();
 	window_set_background_color(window, bg_color);
