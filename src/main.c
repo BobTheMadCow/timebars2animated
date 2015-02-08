@@ -103,6 +103,9 @@ static void animate_hour_down(int from_time, int to_time)
 		hour_from_frame = GRect(HOUR_LOC, (int)(MAX_HEIGHT - (from_time * adjusted_hour_unit_height)), HOUR_WIDTH, BAR_MIN_LOC);
 		hour_to_frame = GRect(HOUR_LOC, (int)(MAX_HEIGHT - (to_time * adjusted_hour_unit_height)), HOUR_WIDTH, BAR_MIN_LOC);
 		
+		property_animation_destroy(hour_down_animation);
+		hour_down_animation = NULL;
+		
 		hour_down_animation = property_animation_create_layer_frame(hour_bar_layer, &hour_from_frame, &hour_to_frame);
 		animation_set_curve((Animation*)hour_down_animation, CURVE); //defaults to EaseInOut
 		animation_set_delay((Animation*)hour_down_animation, (animation_duration / 4));
@@ -124,6 +127,9 @@ static void animate_hour_up(int from_time, int to_time)
 		
 		hour_from_frame = GRect(HOUR_LOC, (int)(MAX_HEIGHT - (from_time * adjusted_hour_unit_height)), HOUR_WIDTH, BAR_MIN_LOC);
 		hour_to_frame = GRect(HOUR_LOC, (int)(MAX_HEIGHT - (to_time * adjusted_hour_unit_height)), HOUR_WIDTH, BAR_MIN_LOC);
+		
+		property_animation_destroy(hour_up_animation);
+		hour_up_animation = NULL;
 		
 		hour_up_animation = property_animation_create_layer_frame(hour_bar_layer, &hour_from_frame, &hour_to_frame);
 		animation_set_curve((Animation*)hour_up_animation, CURVE); //defaults to EaseInOut
@@ -147,6 +153,9 @@ static void animate_minute_down(int from_time, int to_time)
 		minute_from_frame = GRect(MINUTE_LOC, (int)(MAX_HEIGHT - (from_time * MINUTE_UNIT_HEIGHT)), MINUTE_WIDTH, BAR_MIN_LOC);
 		minute_to_frame = GRect(MINUTE_LOC, (int)(MAX_HEIGHT - (to_time * MINUTE_UNIT_HEIGHT)), MINUTE_WIDTH, BAR_MIN_LOC);
 		
+		property_animation_destroy(minute_down_animation);
+		minute_down_animation = NULL;
+		
 		minute_down_animation = property_animation_create_layer_frame(minute_bar_layer, &minute_from_frame, &minute_to_frame);
 		animation_set_curve((Animation*)minute_down_animation, CURVE); //defaults to EaseInOut
 		animation_set_delay((Animation*)minute_down_animation, (animation_duration / 4));
@@ -168,6 +177,9 @@ static void animate_minute_up(int from_time, int to_time)
 				
 		minute_from_frame = GRect(MINUTE_LOC, (int)(MAX_HEIGHT - (from_time * MINUTE_UNIT_HEIGHT)), HOUR_WIDTH, BAR_MIN_LOC);
 		minute_to_frame = GRect(MINUTE_LOC, (int)(MAX_HEIGHT - (to_time * MINUTE_UNIT_HEIGHT)), HOUR_WIDTH, BAR_MIN_LOC);
+		
+		property_animation_destroy(minute_up_animation);
+		minute_up_animation = NULL;
 		
 		minute_up_animation = property_animation_create_layer_frame(minute_bar_layer, &minute_from_frame, &minute_to_frame);
 		animation_set_curve((Animation*)minute_up_animation, CURVE); //defaults to EaseInOut

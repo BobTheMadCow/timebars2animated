@@ -33,7 +33,7 @@
     "shortName": "Time Bars",
     "uuid": "0f56380c-64f4-4ea1-b1cd-74bf7c5c74b2",
     "versionCode": 3,
-    "versionLabel": "4.0",
+    "versionLabel": "4.1",
     "watchapp": {
         "watchface": true
     }
